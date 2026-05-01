@@ -151,11 +151,12 @@ function closeModal(){
 }
 function confirmCreate(){
   const title=document.getElementById('minput').value.trim()||'Sans titre';
+  const type=pendingType||'presentation';
   closeModal();
   const id=Date.now().toString();
-  const p={id,type:pendingType||'presentation',title,created:Date.now(),updated:Date.now()};
+  const p={id,type,title,created:Date.now(),updated:Date.now()};
   const all=getProjects();all.unshift(p);setProjects(all);
-  go(p.type,id,title);
+  go(type,id,title);
 }
 
 document.getElementById('minput').addEventListener('keydown',e=>{
