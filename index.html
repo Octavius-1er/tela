@@ -17,8 +17,7 @@ body::before{content:'';position:fixed;inset:0;background:
   radial-gradient(ellipse 60% 40% at 85% 100%,rgba(255,107,107,.05) 0%,transparent 60%);
   pointer-events:none}
 header{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid var(--border)}
-.logo{font-family:'Fraunces',serif;font-size:26px;font-weight:800;letter-spacing:-.5px}
-.logo span{color:var(--coral)}
+.logo{font-family:'Fraunces',serif;font-size:26px;font-weight:800;font-style:italic;letter-spacing:-.5px}
 .hbtn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;transition:all .2s}
 .hbtn:hover{color:var(--text);border-color:var(--teal)}
 .hero{text-align:center;padding:56px 32px 40px}
@@ -56,12 +55,26 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
 .rdel{position:absolute;top:8px;right:8px;background:rgba(255,107,107,.1);border:none;color:var(--coral);width:22px;height:22px;border-radius:5px;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:13px}
 .ritem:hover .rdel{display:flex}
 .empty{color:var(--muted);font-size:13px;text-align:center;padding:28px;background:var(--surface);border-radius:12px;border:1px dashed var(--border)}
-@media(max-width:600px){header,section.modes,.recent{padding-left:16px;padding-right:16px}.hero{padding:32px 16px 28px}}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.overlay.on{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:340px;max-width:90vw}
+.modal h3{font-family:'Fraunces',serif;font-size:22px;margin-bottom:6px}
+.modal p{color:var(--muted);font-size:13px;margin-bottom:18px}
+.modal input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;margin-bottom:14px}
+.modal input:focus{border-color:var(--coral)}
+.mbtns{display:flex;gap:8px}
+.mbtn{flex:1;padding:11px;border-radius:10px;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.mbtn.cancel{background:var(--surface2);color:var(--muted)}
+.mbtn.cancel:hover{color:var(--text)}
+.mbtn.confirm{background:var(--coral);color:#fff}
+.mbtn.confirm:hover{filter:brightness(1.1)}
+@media(max-width:600px){header,.modes,.recent{padding-left:16px;padding-right:16px}.hero{padding:32px 16px 28px}}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo"><span style="font-style:italic">Tela</span></div>
+  <div class="logo">Tela</div>
   <button class="hbtn" onclick="openFile()">📂 Ouvrir un fichier</button>
 </header>
 
@@ -76,21 +89,21 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
     <h2>Présentation</h2>
     <p>Diaporamas avec textes, images et mise en scène. Mode plein écran inclus.</p>
     <div class="tags"><span class="tag">Diaporama</span><span class="tag">PowerPoint</span><span class="tag">Slides</span></div>
-    <button class="btn-create" onclick="createNew('presentation')">✨ Créer →</button>
+    <button class="btn-create" onclick="askName('presentation')">✨ Créer →</button>
   </div>
   <div class="mode-card">
     <span class="mode-icon">🎨</span>
     <h2>Affiche</h2>
     <p>Éditeur canvas libre pour posters, flyers et visuels. Export PNG haute qualité.</p>
     <div class="tags"><span class="tag">Poster A4/A3</span><span class="tag">Instagram</span><span class="tag">PNG</span></div>
-    <button class="btn-create" onclick="createNew('affiche')">✨ Créer →</button>
+    <button class="btn-create" onclick="askName('affiche')">✨ Créer →</button>
   </div>
   <div class="mode-card">
     <span class="mode-icon">🎬</span>
     <h2>Vidéo</h2>
     <p>Montage par timeline : clips, textes animés, transitions et export vidéo.</p>
     <div class="tags"><span class="tag">Timeline</span><span class="tag">Transitions</span><span class="tag">Export WebM</span></div>
-    <button class="btn-create" onclick="createNew('video')">✨ Créer →</button>
+    <button class="btn-create" onclick="askName('video')">✨ Créer →</button>
   </div>
 </section>
 
@@ -99,25 +112,63 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
   <div class="rgrid" id="rgrid"></div>
 </section>
 
+<!-- Modal nom du projet -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="micon">✨ Nouveau projet</h3>
+    <p>Donne un nom à ton projet :</p>
+    <input type="text" id="minput" placeholder="Mon projet" maxlength="60">
+    <div class="mbtns">
+      <button class="mbtn cancel" onclick="closeModal()">Annuler</button>
+      <button class="mbtn confirm" id="mconfirm" onclick="confirmCreate()">Créer →</button>
+    </div>
+  </div>
+</div>
+
 <input type="file" id="fopen" accept=".tela,.json" style="display:none" onchange="handleOpen(event)">
 
 <script>
 const PKEY='tela_projects';
 const emoji={presentation:'🎯',affiche:'🎨',video:'🎬'};
 const clrs={presentation:'#ff6b6b',affiche:'#4ecdc4',video:'#ffd166'};
+const files={presentation:'presentation.html',affiche:'affiche.html',video:'video.html'};
+const icons={presentation:'🎯 Nouvelle présentation',affiche:'🎨 Nouvelle affiche',video:'🎬 Nouvelle vidéo'};
+let pendingType=null;
 
 function getProjects(){try{return JSON.parse(localStorage.getItem(PKEY)||'[]')}catch{return[]}}
 function setProjects(p){localStorage.setItem(PKEY,JSON.stringify(p))}
 
-function createNew(type){
-  const title=prompt('Nom du projet :','Mon projet')||'Sans titre';
+function askName(type){
+  pendingType=type;
+  document.getElementById('micon').textContent=icons[type];
+  document.getElementById('minput').value='';
+  document.getElementById('overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('minput').focus(),100);
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('on');
+  pendingType=null;
+}
+function confirmCreate(){
+  const title=document.getElementById('minput').value.trim()||'Sans titre';
+  closeModal();
   const id=Date.now().toString();
-  const p={id,type,title,created:Date.now(),updated:Date.now()};
+  const p={id,type:pendingType||'presentation',title,created:Date.now(),updated:Date.now()};
   const all=getProjects();all.unshift(p);setProjects(all);
-  go(type,id,title);
+  go(p.type,id,title);
 }
 
-function go(type,id,title){window.location.href=`${type}.html?id=${encodeURIComponent(id)}&title=${encodeURIComponent(title)}`}
+document.getElementById('minput').addEventListener('keydown',e=>{
+  if(e.key==='Enter')confirmCreate();
+  if(e.key==='Escape')closeModal();
+});
+document.getElementById('overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('overlay'))closeModal();
+});
+
+function go(type,id,title){
+  window.location.href=`${files[type]}?id=${encodeURIComponent(id)}&title=${encodeURIComponent(title)}`;
+}
 
 function openFile(){document.getElementById('fopen').click()}
 function handleOpen(e){
