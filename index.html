@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tela</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d0f1a;--surface:#161928;--surface2:#1e2235;--border:#2a2f4e;
+  --text:#eef0ff;--muted:#7880b0;--coral:#ff6b6b;--teal:#4ecdc4;--gold:#ffd166;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 80% 50% at 15% 0%,rgba(78,205,196,.07) 0%,transparent 60%),
+  radial-gradient(ellipse 60% 40% at 85% 100%,rgba(255,107,107,.05) 0%,transparent 60%);
+  pointer-events:none}
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid var(--border)}
+.logo{font-family:'Fraunces',serif;font-size:26px;font-weight:800;letter-spacing:-.5px}
+.logo span{color:var(--coral)}
+.hbtn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;transition:all .2s}
+.hbtn:hover{color:var(--text);border-color:var(--teal)}
+.hero{text-align:center;padding:56px 32px 40px}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(36px,5.5vw,68px);font-weight:800;line-height:1.1;letter-spacing:-2px;margin-bottom:14px}
+.hero h1 em{font-style:italic;color:var(--coral)}
+.hero p{color:var(--muted);font-size:17px;max-width:380px;margin:0 auto}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;padding:0 32px 56px;max-width:980px;margin:0 auto}
+.mode-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.mode-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s}
+.mode-card:nth-child(1)::before{background:radial-gradient(ellipse at top right,rgba(255,107,107,.13),transparent 65%)}
+.mode-card:nth-child(2)::before{background:radial-gradient(ellipse at top right,rgba(78,205,196,.13),transparent 65%)}
+.mode-card:nth-child(3)::before{background:radial-gradient(ellipse at top right,rgba(255,209,102,.13),transparent 65%)}
+.mode-card:hover::before{opacity:1}
+.mode-card:nth-child(1):hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(255,107,107,.18);border-color:rgba(255,107,107,.25)}
+.mode-card:nth-child(2):hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(78,205,196,.18);border-color:rgba(78,205,196,.25)}
+.mode-card:nth-child(3):hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(255,209,102,.18);border-color:rgba(255,209,102,.25)}
+.mode-icon{font-size:44px;margin-bottom:16px;display:block}
+.mode-card h2{font-family:'Fraunces',serif;font-size:24px;font-weight:700;margin-bottom:6px}
+.mode-card>p{color:var(--muted);font-size:14px;line-height:1.55;margin-bottom:20px}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:18px}
+.tag{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--muted)}
+.btn-create{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:11px;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.mode-card:nth-child(1) .btn-create{background:var(--coral);color:#fff}
+.mode-card:nth-child(2) .btn-create{background:var(--teal);color:#0d0f1a}
+.mode-card:nth-child(3) .btn-create{background:var(--gold);color:#0d0f1a}
+.btn-create:hover{filter:brightness(1.1);transform:scale(1.03)}
+.recent{padding:0 32px 56px;max-width:980px;margin:0 auto}
+.recent h3{font-family:'Fraunces',serif;font-size:20px;font-weight:700;margin-bottom:14px;color:var(--muted)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.ritem{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;position:relative}
+.ritem:hover{border-color:var(--teal);transform:translateY(-2px)}
+.rthumb{width:100%;aspect-ratio:16/9;border-radius:8px;margin-bottom:9px;display:flex;align-items:center;justify-content:center;font-size:26px}
+.rtitle{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px}
+.rdate{font-size:11px;color:var(--muted)}
+.rdel{position:absolute;top:8px;right:8px;background:rgba(255,107,107,.1);border:none;color:var(--coral);width:22px;height:22px;border-radius:5px;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:13px}
+.ritem:hover .rdel{display:flex}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:28px;background:var(--surface);border-radius:12px;border:1px dashed var(--border)}
+@media(max-width:600px){header,section.modes,.recent{padding-left:16px;padding-right:16px}.hero{padding:32px 16px 28px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span style="font-style:italic">Tela</span></div>
+  <button class="hbtn" onclick="openFile()">📂 Ouvrir un fichier</button>
+</header>
+
+<section class="hero">
+  <h1>Créez <em>librement</em>,<br>sans connexion.</h1>
+  <p>Votre outil créatif 100 % local — aucun compte, aucune donnée envoyée.</p>
+</section>
+
+<section class="modes">
+  <div class="mode-card">
+    <span class="mode-icon">🎯</span>
+    <h2>Présentation</h2>
+    <p>Diaporamas avec textes, images et mise en scène. Mode plein écran inclus.</p>
+    <div class="tags"><span class="tag">Diaporama</span><span class="tag">PowerPoint</span><span class="tag">Slides</span></div>
+    <button class="btn-create" onclick="createNew('presentation')">✨ Créer →</button>
+  </div>
+  <div class="mode-card">
+    <span class="mode-icon">🎨</span>
+    <h2>Affiche</h2>
+    <p>Éditeur canvas libre pour posters, flyers et visuels. Export PNG haute qualité.</p>
+    <div class="tags"><span class="tag">Poster A4/A3</span><span class="tag">Instagram</span><span class="tag">PNG</span></div>
+    <button class="btn-create" onclick="createNew('affiche')">✨ Créer →</button>
+  </div>
+  <div class="mode-card">
+    <span class="mode-icon">🎬</span>
+    <h2>Vidéo</h2>
+    <p>Montage par timeline : clips, textes animés, transitions et export vidéo.</p>
+    <div class="tags"><span class="tag">Timeline</span><span class="tag">Transitions</span><span class="tag">Export WebM</span></div>
+    <button class="btn-create" onclick="createNew('video')">✨ Créer →</button>
+  </div>
+</section>
+
+<section class="recent">
+  <h3>Projets récents</h3>
+  <div class="rgrid" id="rgrid"></div>
+</section>
+
+<input type="file" id="fopen" accept=".tela,.json" style="display:none" onchange="handleOpen(event)">
+
+<script>
+const PKEY='tela_projects';
+const emoji={presentation:'🎯',affiche:'🎨',video:'🎬'};
+const clrs={presentation:'#ff6b6b',affiche:'#4ecdc4',video:'#ffd166'};
+
+function getProjects(){try{return JSON.parse(localStorage.getItem(PKEY)||'[]')}catch{return[]}}
+function setProjects(p){localStorage.setItem(PKEY,JSON.stringify(p))}
+
+function createNew(type){
+  const title=prompt('Nom du projet :','Mon projet')||'Sans titre';
+  const id=Date.now().toString();
+  const p={id,type,title,created:Date.now(),updated:Date.now()};
+  const all=getProjects();all.unshift(p);setProjects(all);
+  go(type,id,title);
+}
+
+function go(type,id,title){window.location.href=`${type}.html?id=${encodeURIComponent(id)}&title=${encodeURIComponent(title)}`}
+
+function openFile(){document.getElementById('fopen').click()}
+function handleOpen(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!d.type||!d.id){alert('Fichier invalide');return}
+      localStorage.setItem('tela_project_'+d.id,JSON.stringify(d));
+      const all=getProjects();const i=all.findIndex(p=>p.id===d.id);
+      const e2={id:d.id,type:d.type,title:d.title,created:d.created,updated:Date.now()};
+      if(i>=0)all[i]=e2;else all.unshift(e2);
+      setProjects(all);go(d.type,d.id,d.title);
+    }catch{alert('Fichier invalide ou corrompu')}
+  };
+  r.readAsText(f);e.target.value='';
+}
+
+function render(){
+  const all=getProjects();
+  const g=document.getElementById('rgrid');
+  if(!all.length){g.innerHTML='<div class="empty">Aucun projet récent.<br>Créez votre premier projet ! 🚀</div>';return}
+  g.innerHTML=all.map(p=>`
+    <div class="ritem" onclick="go('${p.type}','${p.id}','${encodeURIComponent(p.title)}')">
+      <div class="rthumb" style="background:${clrs[p.type]}22">${emoji[p.type]}</div>
+      <div class="rtitle">${p.title}</div>
+      <div class="rdate">${new Date(p.updated).toLocaleDateString('fr-FR')}</div>
+      <button class="rdel" onclick="del(event,'${p.id}')">✕</button>
+    </div>`).join('');
+}
+
+function del(e,id){
+  e.stopPropagation();
+  if(!confirm('Supprimer ce projet ?'))return;
+  setProjects(getProjects().filter(p=>p.id!==id));
+  localStorage.removeItem('tela_project_'+id);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
