@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Affiche — Tela</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0d0f1a;--surface:#161928;--surface2:#1e2235;--border:#2a2f4e;--text:#eef0ff;--muted:#7880b0;--coral:#ff6b6b;--teal:#4ecdc4;--gold:#ffd166}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.tb{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;padding:0 10px;height:50px;flex-shrink:0;overflow-x:auto}
+.tb::-webkit-scrollbar{display:none}
+.tbtn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12px;white-space:nowrap;transition:all .15s}
+.tbtn:hover{border-color:var(--teal);color:var(--teal)}
+.tbtn.accent{background:var(--teal);border-color:var(--teal);color:#0d0f1a;font-weight:600}
+.tbtn.accent:hover{background:#3bb8b0}
+.tbtn.danger{background:var(--coral);border-color:var(--coral);color:#fff}
+.tsep{width:1px;background:var(--border);height:26px;margin:0 2px;flex-shrink:0}
+#ptitle{background:transparent;border:none;color:var(--text);font-family:inherit;font-size:14px;font-weight:600;width:160px;outline:none;padding:3px 7px;border-radius:5px}
+#ptitle:focus{background:var(--surface2)}
+.tright{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.editor{display:flex;flex:1;overflow:hidden}
+/* LAYERS SIDEBAR */
+.lsidebar{width:164px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.lhead{padding:8px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.layers{flex:1;overflow-y:auto;padding:6px}
+.layers::-webkit-scrollbar{width:3px}
+.layers::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.layer{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;cursor:pointer;font-size:12px;border:1px solid transparent;transition:all .15s;margin-bottom:3px}
+.layer:hover{background:var(--surface2)}
+.layer.active{background:rgba(78,205,196,.1);border-color:rgba(78,205,196,.25)}
+.layer .icon{font-size:14px;flex-shrink:0}
+.layer .lname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.layer .lvis{font-size:12px;cursor:pointer;color:var(--muted);transition:.15s}
+.layer .lvis:hover{color:var(--text)}
+/* CANVAS */
+.carea{flex:1;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+#poster{position:relative;background:#fff;box-shadow:0 4px 40px rgba(0,0,0,.8);overflow:hidden;transform-origin:center}
+/* ELEMENTS */
+.pel{position:absolute;touch-action:none;cursor:move}
+.pel.selected{outline:2px solid var(--teal);outline-offset:2px;z-index:100}
+.pel-text{width:100%;height:100%;overflow:hidden;word-break:break-word;padding:4px 8px;outline:none;line-height:1.3}
+.rh{position:absolute;width:12px;height:12px;background:#fff;border:2px solid var(--teal);border-radius:2px;z-index:200;touch-action:none}
+.rh-nw{top:-6px;left:-6px;cursor:nw-resize}.rh-ne{top:-6px;right:-6px;cursor:ne-resize}
+.rh-se{bottom:-6px;right:-6px;cursor:se-resize}.rh-sw{bottom:-6px;left:-6px;cursor:sw-resize}
+/* PROPS */
+.props{width:230px;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0}
+.props::-webkit-scrollbar{width:3px}
+.props::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.psec{padding:12px;border-bottom:1px solid var(--border)}
+.psec h4{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:9px}
+.prow{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.prow label{font-size:11px;color:var(--muted);width:48px;flex-shrink:0}
+.pinput{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 7px;font-family:inherit;font-size:12px;flex:1;min-width:0}
+.pinput:focus{outline:none;border-color:var(--teal)}
+.pselect{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 7px;font-family:inherit;font-size:12px;flex:1;-webkit-appearance:none}
+.pcolor{width:30px;height:26px;border-radius:5px;border:1px solid var(--border);cursor:pointer;padding:2px;background:var(--surface2)}
+.ptogrow{display:flex;gap:5px;flex-wrap:wrap}
+.ptog{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 9px;border-radius:5px;cursor:pointer;font-family:inherit;font-size:12px;transition:.15s}
+.ptog:hover{border-color:var(--text);color:var(--text)}
+.ptog.on{background:rgba(78,205,196,.1);border-color:var(--teal);color:var(--teal)}
+.nodsel{padding:20px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+.delbtn{width:100%;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);color:var(--coral);padding:7px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:.15s}
+.delbtn:hover{background:rgba(255,107,107,.15)}
+/* FORMAT MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal.on{display:flex}
+.mbox{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;width:340px;max-width:90vw}
+.mbox h3{font-family:'Fraunces',serif;font-size:20px;margin-bottom:18px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
+.fopt{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center;transition:.15s}
+.fopt:hover,.fopt.sel{border-color:var(--teal);background:rgba(78,205,196,.08)}
+.fopt .fn{font-size:13px;font-weight:600;margin-bottom:2px}
+.fopt .fd{font-size:11px;color:var(--muted)}
+.fcustom{display:flex;gap:8px;margin-bottom:16px;align-items:center;font-size:13px;color:var(--muted)}
+.mbtn{width:100%;background:var(--teal);border:none;color:#0d0f1a;font-family:inherit;font-size:14px;font-weight:700;padding:11px;border-radius:10px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="tb">
+  <button class="tbtn" onclick="back()">← Accueil</button>
+  <div class="tsep"></div>
+  <input type="text" id="ptitle" value="Affiche">
+  <div class="tsep"></div>
+  <button class="tbtn" onclick="addText()">T Texte</button>
+  <button class="tbtn" onclick="trigImg()">🖼 Image</button>
+  <button class="tbtn" onclick="addShape('rect')">▭ Rect</button>
+  <button class="tbtn" onclick="addShape('circle')">○ Cercle</button>
+  <button class="tbtn" onclick="addShape('line')">— Ligne</button>
+  <div class="tsep"></div>
+  <label style="font-size:11px;color:var(--muted);flex-shrink:0">Fond:</label>
+  <div id="bgprev" style="width:26px;height:26px;border-radius:5px;border:1px solid var(--border);background:#fff;cursor:pointer;flex-shrink:0" onclick="document.getElementById('bgci').click()"></div>
+  <input type="color" id="bgci" value="#ffffff" style="display:none" onchange="setBg(this.value)">
+  <div class="tright">
+    <button class="tbtn" onclick="loadF()">📂 Ouvrir</button>
+    <button class="tbtn" onclick="saveF()">💾 Sauver</button>
+    <button class="tbtn accent" onclick="exportPNG()">⬇ PNG</button>
+  </div>
+</div>
+
+<div class="editor">
+  <aside class="lsidebar">
+    <div class="lhead"><span>Calques</span><span id="dim" style="font-size:9px"></span></div>
+    <div class="layers" id="layers"></div>
+  </aside>
+
+  <div class="carea" id="carea" onclick="handleBg(event)">
+    <div id="poster"></div>
+  </div>
+
+  <aside class="props" id="props">
+    <div class="nodsel"><div style="font-size:28px;margin-bottom:8px">👆</div>Sélectionnez un élément</div>
+  </aside>
+</div>
+
+<!-- Format modal -->
+<div class="modal on" id="fmModal">
+  <div class="mbox">
+    <h3>🎨 Choisir un format</h3>
+    <div class="fgrid" id="fgrid"></div>
+    <div class="fcustom">
+      <label>Sur mesure :</label>
+      <input id="cw" type="number" class="pinput" style="width:70px" value="794" placeholder="L">
+      <span>×</span>
+      <input id="ch" type="number" class="pinput" style="width:70px" value="1123" placeholder="H">
+      <span>px</span>
+    </div>
+    <button class="mbtn" onclick="applyFormat()">Créer →</button>
+  </div>
+</div>
+
+<input type="file" id="imgup" accept="image/*" style="display:none" onchange="onImg(event)">
+<input type="file" id="fileload" accept=".tela,.json" style="display:none" onchange="onLoad(event)">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const FORMATS=[
+  {name:'A4 Portrait',w:794,h:1123,icon:'📄'},
+  {name:'A4 Paysage',w:1123,h:794,icon:'📑'},
+  {name:'A3 Portrait',w:1123,h:1587,icon:'🗞️'},
+  {name:'Carré',w:900,h:900,icon:'⬛'},
+  {name:'Story (9:16)',w:540,h:960,icon:'📱'},
+  {name:'Bannière',w:1200,h:400,icon:'🏷️'},
+];
+const FONTS=['Arial','Georgia','Impact','Courier New','Verdana','Trebuchet MS','Times New Roman','Comic Sans MS'];
+const qp=new URLSearchParams(location.search);
+let S={
+  id:qp.get('id')||Date.now().toString(),
+  type:'affiche',
+  title:decodeURIComponent(qp.get('title')||'Affiche'),
+  w:794,h:1123,bg:'#ffffff',elements:[],selEl:null,
+  created:Date.now(),updated:Date.now()
+};
+
+// Format modal
+const fgrid=document.getElementById('fgrid');
+fgrid.innerHTML=FORMATS.map((f,i)=>`
+  <div class="fopt ${i===0?'sel':''}" onclick="pickF(this,${i})">
+    <div class="fn">${f.icon} ${f.name}</div>
+    <div class="fd">${f.w}×${f.h}px</div>
+  </div>`).join('');
+let selFmt=0;
+function pickF(el,i){selFmt=i;document.querySelectorAll('.fopt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');document.getElementById('cw').value=FORMATS[i].w;document.getElementById('ch').value=FORMATS[i].h}
+function applyFormat(){
+  S.w=parseInt(document.getElementById('cw').value)||794;
+  S.h=parseInt(document.getElementById('ch').value)||1123;
+  document.getElementById('fmModal').classList.remove('on');
+  setupCanvas();
+}
+
+function init(){
+  document.getElementById('ptitle').value=S.title;
+  document.getElementById('ptitle').onchange=()=>{S.title=document.getElementById('ptitle').value;autosave()};
+  const raw=localStorage.getItem('tela_project_'+S.id);
+  if(raw){
+    try{const d=JSON.parse(raw);Object.assign(S,d);S.selEl=null;
+      document.getElementById('fmModal').classList.remove('on');
+      setupCanvas();return;
+    }catch{}
+  }
+}
+
+function setupCanvas(){
+  const poster=document.getElementById('poster');
+  poster.style.width=S.w+'px';poster.style.height=S.h+'px';poster.style.background=S.bg;
+  document.getElementById('bgprev').style.background=S.bg;
+  document.getElementById('bgci').value=S.bg;
+  document.getElementById('dim').textContent=`${S.w}×${S.h}`;
+  poster.querySelectorAll('.pel').forEach(e=>e.remove());
+  S.elements.forEach(renderEl);
+  scaleCanvas();renderLayers();
+  window.addEventListener('resize',scaleCanvas);
+  document.addEventListener('keydown',onKey);
+}
+
+function scaleCanvas(){
+  const area=document.getElementById('carea');
+  const aw=area.clientWidth-40,ah=area.clientHeight-40;
+  const s=Math.min(aw/S.w,ah/S.h,1.2);
+  document.getElementById('poster').style.transform=`scale(${s})`;
+}
+
+function scale(){
+  const p=document.getElementById('poster');
+  return p.getBoundingClientRect().width/S.w;
+}
+
+function setBg(c){S.bg=c;document.getElementById('poster').style.background=c;document.getElementById('bgprev').style.background=c;autosave()}
+
+function handleBg(e){
+  if(e.target===document.getElementById('carea')||e.target===document.getElementById('poster')){
+    stopEdit();deselAll();
+  }
+}
+
+// ELEMENTS
+let zc=10;
+function mkEl(type,extra){return{id:Date.now().toString(),type,x:60,y:60,w:280,h:90,z:zc++,visible:true,...extra}}
+
+function addText(){
+  const el=mkEl('text',{html:'Votre texte ici',fs:32,font:'Arial',color:'#000000',bold:false,italic:false,align:'left',bg:'transparent',w:360,h:100});
+  S.elements.push(el);renderEl(el);selEl(el.id);renderLayers();autosave();
+}
+
+function addShape(sh){
+  const cols={rect:'#4ecdc4',circle:'#ff6b6b',line:'#ffd166'};
+  const el=mkEl('shape',{sh,fill:cols[sh]||'#4ecdc4',w:sh==='line'?300:180,h:sh==='line'?8:sh==='circle'?180:120,rad:sh==='rect'?8:0,opacity:100});
+  S.elements.push(el);renderEl(el);selEl(el.id);renderLayers();autosave();
+}
+
+function trigImg(){document.getElementById('imgup').click()}
+function onImg(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const ar=img.width/img.height;const w=Math.min(400,S.w*.6);
+      const el=mkEl('image',{src:ev.target.result,w,h:w/ar,fit:'cover'});
+      S.elements.push(el);renderEl(el);selEl(el.id);renderLayers();autosave();
+    };
+    img.src=ev.target.result;
+  };
+  r.readAsDataURL(f);e.target.value='';
+}
+
+function findEl(id){return S.elements.find(e=>e.id===id)}
+function findElIdx(id){return S.elements.findIndex(e=>e.id===id)}
+
+function renderEl(el){
+  const poster=document.getElementById('poster');
+  const d=document.createElement('div');
+  d.className='pel';d.dataset.id=el.id;
+  d.style.cssText=`left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;z-index:${el.z};touch-action:none;opacity:${(el.opacity||100)/100};display:${el.visible===false?'none':'block'}`;
+
+  if(el.type==='text'){
+    const inner=document.createElement('div');
+    inner.className='pel-text';
+    inner.innerHTML=el.html||'';
+    applyTextStyle(inner,el);
+    d.appendChild(inner);
+    d.addEventListener('dblclick',ev=>{ev.stopPropagation();startEdit(el.id)});
+  }
+  if(el.type==='shape'){applyShapeStyle(d,el)}
+  if(el.type==='image'){
+    const img=document.createElement('img');
+    img.src=el.src;img.style.cssText=`width:100%;height:100%;object-fit:${el.fit||'cover'};pointer-events:none;display:block`;
+    d.appendChild(img);
+  }
+
+  d.addEventListener('pointerdown',ev=>{
+    if(d.dataset.ed)return;
+    ev.stopPropagation();selEl(el.id);startDrag(ev,el,d);
+  });
+  poster.appendChild(d);
+  if(el.id===S.selEl){d.classList.add('selected');addHandles(d,el)}
+}
+
+function applyTextStyle(inner,el){
+  inner.style.cssText=`width:100%;height:100%;font-size:${el.fs}px;font-family:'${el.font}',sans-serif;
+    color:${el.color||'#000'};font-weight:${el.bold?'bold':'normal'};font-style:${el.italic?'italic':'normal'};
+    text-align:${el.align||'left'};text-decoration:${el.underline?'underline':'none'};
+    background:${el.bg||'transparent'};padding:4px 8px;overflow:hidden;word-break:break-word;line-height:1.3;outline:none`;
+}
+function applyShapeStyle(d,el){
+  d.style.background=el.fill||'#4ecdc4';
+  d.style.borderRadius=el.sh==='circle'?'50%':(el.rad||0)+'px';
+}
+
+function selEl(id){
+  S.selEl=id;
+  document.querySelectorAll('.pel').forEach(e=>{e.classList.remove('selected');e.querySelectorAll('.rh').forEach(h=>h.remove())});
+  const el=findEl(id);if(!el)return;
+  const d=document.querySelector(`.pel[data-id="${id}"]`);
+  if(d){d.classList.add('selected');addHandles(d,el)}
+  renderLayers();updateProps();
+}
+function deselAll(){
+  S.selEl=null;
+  document.querySelectorAll('.pel').forEach(e=>{e.classList.remove('selected');e.querySelectorAll('.rh').forEach(h=>h.remove())});
+  renderLayers();updateProps();
+}
+
+function addHandles(d,el){
+  ['nw','ne','se','sw'].forEach(p=>{
+    const h=document.createElement('div');
+    h.className=`rh rh-${p}`;h.dataset.pos=p;
+    h.addEventListener('pointerdown',ev=>{ev.stopPropagation();startResize(ev,el,d,p)});
+    d.appendChild(h);
+  });
+}
+
+function startDrag(e,el,d){
+  e.preventDefault();d.setPointerCapture(e.pointerId);
+  const sx=e.clientX,sy=e.clientY,ox=el.x,oy=el.y,s=scale();
+  const mv=e2=>{
+    el.x=Math.round(ox+(e2.clientX-sx)/s);
+    el.y=Math.round(oy+(e2.clientY-sy)/s);
+    d.style.left=el.x+'px';d.style.top=el.y+'px';
+  };
+  const up=()=>{d.removeEventListener('pointermove',mv);d.removeEventListener('pointerup',up);renderLayers();autosave()};
+  d.addEventListener('pointermove',mv);d.addEventListener('pointerup',up);
+}
+
+function startResize(e,el,d,pos){
+  e.preventDefault();d.setPointerCapture(e.pointerId);
+  const sx=e.clientX,sy=e.clientY,{x:ox,y:oy,w:ow,h:oh}={...el},s=scale();
+  const mv=e2=>{
+    const dx=(e2.clientX-sx)/s,dy=(e2.clientY-sy)/s;
+    if(pos.includes('e'))el.w=Math.max(20,Math.round(ow+dx));
+    if(pos.includes('s'))el.h=Math.max(8,Math.round(oh+dy));
+    if(pos.includes('w')){el.x=Math.round(ox+dx);el.w=Math.max(20,Math.round(ow-dx))}
+    if(pos.includes('n')){el.y=Math.round(oy+dy);el.h=Math.max(8,Math.round(oh-dy))}
+    d.style.cssText=`position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;z-index:${el.z};touch-action:none;opacity:${(el.opacity||100)/100}`;
+    if(el.id===S.selEl)d.classList.add('selected');
+  };
+  const up=()=>{
+    d.removeEventListener('pointermove',mv);d.removeEventListener('pointerup',up);
+    d.querySelectorAll('.rh').forEach(h=>h.remove());addHandles(d,el);autosave();
+  };
+  d.addEventListener('pointermove',mv);d.addEventListener('pointerup',up);
+}
+
+function startEdit(id){
+  const el=findEl(id);if(!el||el.type!=='text')return;
+  const d=document.querySelector(`.pel[data-id="${id}"]`);if(!d)return;
+  const tc=d.querySelector('.pel-text');if(!tc)return;
+  d.dataset.ed='1';tc.contentEditable='true';tc.style.cursor='text';tc.style.userSelect='text';
+  tc.focus();
+  tc.addEventListener('blur',()=>stopEdit(),{once:true});
+  tc.addEventListener('input',()=>{el.html=tc.innerHTML;autosave()});
+}
+function stopEdit(){
+  const d=document.querySelector('.pel[data-ed]');if(!d)return;
+  const tc=d.querySelector('.pel-text');
+  if(tc){tc.contentEditable='false';tc.style.cursor='';tc.style.userSelect='none';
+    const el=findEl(d.dataset.id);if(el){el.html=tc.innerHTML;autosave()}}
+  delete d.dataset.ed;
+}
+
+function delSelEl(){
+  if(!S.selEl)return;
+  const i=findElIdx(S.selEl);if(i>=0)S.elements.splice(i,1);
+  document.querySelector(`.pel[data-id="${S.selEl}"]`)?.remove();
+  S.selEl=null;renderLayers();updateProps();autosave();
+}
+
+function setP(k,v){const el=findEl(S.selEl);if(!el)return;el[k]=v;refreshDom(el);autosave()}
+function setTP(k,v){const el=findEl(S.selEl);if(!el)return;el[k]=v;refreshDom(el);updateProps();autosave()}
+function togTP(k){const el=findEl(S.selEl);if(!el)return;el[k]=!el[k];refreshDom(el);updateProps();autosave()}
+
+function refreshDom(el){
+  const d=document.querySelector(`.pel[data-id="${el.id}"]`);if(!d)return;
+  d.style.left=el.x+'px';d.style.top=el.y+'px';d.style.width=el.w+'px';d.style.height=el.h+'px';
+  d.style.zIndex=el.z;d.style.opacity=(el.opacity||100)/100;
+  if(el.type==='text'){const tc=d.querySelector('.pel-text');if(tc)applyTextStyle(tc,el)}
+  if(el.type==='shape')applyShapeStyle(d,el);
+  if(el.type==='image'){const img=d.querySelector('img');if(img)img.style.objectFit=el.fit||'cover'}
+  renderLayers();
+}
+
+// LAYERS
+const ICONS={text:'T',shape:'▭',image:'🖼'};
+function renderLayers(){
+  const lc=document.getElementById('layers');
+  const sorted=[...S.elements].sort((a,b)=>b.z-a.z);
+  lc.innerHTML=sorted.map(el=>`
+    <div class="layer ${el.id===S.selEl?'active':''}" onclick="selEl('${el.id}')">
+      <span class="icon">${ICONS[el.type]||'?'}</span>
+      <span class="lname">${el.html?el.html.replace(/<[^>]+>/g,'').substring(0,12)||(el.sh||el.type):el.type}</span>
+      <span class="lvis" onclick="togVis(event,'${el.id}')">${el.visible===false?'🙈':'👁'}</span>
+    </div>`).join('');
+}
+
+function togVis(e,id){
+  e.stopPropagation();
+  const el=findEl(id);if(!el)return;
+  el.visible=el.visible===false?true:false;
+  const d=document.querySelector(`.pel[data-id="${id}"]`);
+  if(d)d.style.display=el.visible===false?'none':'block';
+  renderLayers();autosave();
+}
+
+// PROPS
+function updateProps(){
+  const panel=document.getElementById('props');
+  const el=S.selEl?findEl(S.selEl):null;
+  if(!el){panel.innerHTML='<div class="nodsel"><div style="font-size:28px;margin-bottom:8px">👆</div>Sélectionnez un élément</div>';return}
+  let h='';
+  h+=`<div class="psec"><h4>Position & Taille</h4>
+    <div class="prow"><label>X</label><input class="pinput" type="number" value="${Math.round(el.x)}" onchange="setP('x',+this.value)">
+    <label>Y</label><input class="pinput" type="number" value="${Math.round(el.y)}" onchange="setP('y',+this.value)"></div>
+    <div class="prow"><label>Larg.</label><input class="pinput" type="number" value="${Math.round(el.w)}" onchange="setP('w',+this.value)">
+    <label>Haut.</label><input class="pinput" type="number" value="${Math.round(el.h)}" onchange="setP('h',+this.value)"></div>
+    <div class="prow"><label>Opacité</label><input class="pinput" type="range" min="0" max="100" value="${el.opacity||100}" oninput="setP('opacity',+this.value);this.previousElementSibling&&(this.parentElement.querySelector('.oval').textContent=this.value+'%')"><span class="oval" style="font-size:11px;color:var(--muted);width:32px">${el.opacity||100}%</span></div>
+    <div class="ptogrow">
+      <button class="ptog" onclick="bringF('${el.id}')">⬆ Avant</button>
+      <button class="ptog" onclick="sendB('${el.id}')">⬇ Arrière</button>
+    </div></div>`;
+
+  if(el.type==='text'){
+    h+=`<div class="psec"><h4>Texte</h4>
+      <div class="prow"><label>Taille</label><input class="pinput" type="number" value="${el.fs||32}" onchange="setTP('fs',+this.value)"></div>
+      <div class="prow"><label>Police</label>
+        <select class="pselect" onchange="setTP('font',this.value)">
+          ${FONTS.map(f=>`<option value="${f}" ${el.font===f?'selected':''}>${f}</option>`).join('')}
+        </select></div>
+      <div class="prow"><label>Couleur</label><input type="color" class="pcolor" value="${el.color||'#000000'}" onchange="setTP('color',this.value)">
+      <label>Fond</label><input type="color" class="pcolor" value="${el.bg==='transparent'||!el.bg?'#ffffff':el.bg}" onchange="setTP('bg',this.value)"></div>
+      <div class="ptogrow">
+        <button class="ptog ${el.bold?'on':''}" onclick="togTP('bold')"><b>G</b></button>
+        <button class="ptog ${el.italic?'on':''}" onclick="togTP('italic')"><i>I</i></button>
+        <button class="ptog ${el.underline?'on':''}" onclick="togTP('underline')"><u>S</u></button>
+        <button class="ptog ${el.align==='left'?'on':''}" onclick="setTP('align','left')">◀</button>
+        <button class="ptog ${el.align==='center'?'on':''}" onclick="setTP('align','center')">≡</button>
+        <button class="ptog ${el.align==='right'?'on':''}" onclick="setTP('align','right')">▶</button>
+      </div></div>`;
+  }
+  if(el.type==='shape'){
+    h+=`<div class="psec"><h4>Forme</h4>
+      <div class="prow"><label>Couleur</label><input type="color" class="pcolor" value="${el.fill||'#4ecdc4'}" onchange="setTP('fill',this.value)"></div>
+      ${el.sh!=='circle'&&el.sh!=='line'?`<div class="prow"><label>Arrondi</label><input class="pinput" type="number" min="0" max="500" value="${el.rad||0}" onchange="setTP('rad',+this.value)"></div>`:''}
+    </div>`;
+  }
+  if(el.type==='image'){
+    h+=`<div class="psec"><h4>Image</h4>
+      <div class="prow"><label>Ajust.</label>
+        <select class="pselect" onchange="setTP('fit',this.value)">
+          <option value="cover" ${el.fit==='cover'?'selected':''}>Couvrir</option>
+          <option value="contain" ${el.fit==='contain'?'selected':''}>Contenir</option>
+          <option value="fill" ${el.fit==='fill'?'selected':''}>Étirer</option>
+        </select>
+      </div></div>`;
+  }
+  h+=`<div class="psec"><button class="delbtn" onclick="delSelEl()">🗑 Supprimer</button></div>`;
+  panel.innerHTML=h;
+}
+
+function bringF(id){const el=findEl(id);if(el){el.z=++zc;refreshDom(el)}}
+function sendB(id){const el=findEl(id);if(el&&el.z>1){el.z=Math.max(1,el.z-2);refreshDom(el)}}
+
+// EXPORT
+function exportPNG(){
+  stopEdit();deselAll();
+  const poster=document.getElementById('poster');
+  const oldT=poster.style.transform;poster.style.transform='none';
+  html2canvas(poster,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null}).then(canvas=>{
+    poster.style.transform=oldT;
+    const a=document.createElement('a');
+    a.download=(S.title||'affiche')+'.png';
+    a.href=canvas.toDataURL('image/png');a.click();
+  }).catch(()=>{poster.style.transform=oldT;alert('Export échoué')});
+}
+
+// SAVE/LOAD
+function autosave(){
+  S.updated=Date.now();
+  localStorage.setItem('tela_project_'+S.id,JSON.stringify(S));
+  try{
+    const all=JSON.parse(localStorage.getItem('tela_projects')||'[]');
+    const i=all.findIndex(p=>p.id===S.id);
+    const e2={id:S.id,type:'affiche',title:S.title,created:S.created,updated:S.updated};
+    if(i>=0)all[i]=e2;else all.unshift(e2);
+    localStorage.setItem('tela_projects',JSON.stringify(all));
+  }catch{}
+}
+function saveF(){
+  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/octet-stream'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download=(S.title||'affiche')+'.tela';a.click();
+}
+function loadF(){document.getElementById('fileload').click()}
+function onLoad(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.type!=='affiche'){alert('Pas une affiche');return}
+      Object.assign(S,d);S.selEl=null;
+      setupCanvas();
+    }catch{alert('Fichier invalide')}
+  };
+  r.readAsText(f);e.target.value='';
+}
+
+function back(){if(confirm('Retour ?'))window.location.href='index.html'}
+function onKey(e){
+  if(e.key==='Escape'){stopEdit();deselAll()}
+  if((e.key==='Delete'||e.key==='Backspace')&&!document.querySelector('[data-ed]')&&S.selEl){e.preventDefault();delSelEl()}
+}
+
+init();
+</script>
+</body>
+</html>
