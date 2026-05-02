@@ -138,10 +138,54 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
 /* TOAST */
 .toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,34,53,.95);border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:9px;font-size:13px;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;backdrop-filter:blur(8px)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* HOME PAGE */
+#homepage{display:none;flex-direction:column;height:100vh;background:var(--bg);overflow-y:auto}
+#homepage.on{display:flex}
+.hm-header{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid var(--border);flex-shrink:0}
+.hm-logo{font-family:'Fraunces',serif;font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--coral),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hm-body{flex:1;padding:32px;max-width:1100px;width:100%;margin:0 auto}
+.hm-actions{display:flex;gap:12px;margin-bottom:40px;flex-wrap:wrap}
+.hm-btn-new{background:var(--coral);border:none;color:#fff;padding:12px 24px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .15s}
+.hm-btn-new:hover{background:#ff4e4e;transform:translateY(-1px)}
+.hm-btn-open{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:12px 24px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;transition:all .15s}
+.hm-btn-open:hover{border-color:var(--teal);color:var(--teal)}
+.hm-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px}
+.hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.hm-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
+.hm-card:hover{border-color:var(--coral);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.hm-card-thumb{width:100%;aspect-ratio:16/9;background:var(--surface2);position:relative;overflow:hidden}
+.hm-card-info{padding:10px 12px}
+.hm-card-title{font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm-card-meta{font-size:11px;color:var(--muted)}
+.hm-card-del{position:absolute;top:7px;right:7px;width:24px;height:24px;background:rgba(255,107,107,.85);border:none;border-radius:5px;color:#fff;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:5}
+.hm-card:hover .hm-card-del{display:flex}
+.hm-empty{color:var(--muted);font-size:14px;padding:32px;text-align:center;background:var(--surface);border:1px dashed var(--border);border-radius:12px}
+.hm-canva-badge{background:rgba(120,87,255,.15);border:1px solid rgba(120,87,255,.3);color:#a78bfa;padding:2px 8px;border-radius:4px;font-size:10px;margin-left:6px;vertical-align:middle}
 </style>
 </head>
 <body>
 
+<!-- HOME PAGE -->
+<div id="homepage">
+  <div class="hm-header">
+    <span class="hm-logo">Tela</span>
+    <div style="display:flex;gap:8px">
+      <button class="hm-btn-open" onclick="document.getElementById('fileload-home').click()">📂 Ouvrir .tela</button>
+      <button class="hm-btn-open" onclick="document.getElementById('pptxload').click()">📊 Importer PPTX <span class="hm-canva-badge">Canva</span></button>
+    </div>
+  </div>
+  <div class="hm-body">
+    <div class="hm-actions">
+      <button class="hm-btn-new" onclick="newPresentation()">＋ Nouvelle présentation</button>
+    </div>
+    <div class="hm-section-title">Projets récents</div>
+    <div class="hm-grid" id="hm-grid"></div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div id="editorwrap" style="display:none;flex-direction:column;height:100vh;overflow:hidden">
 <div class="tb">
   <button class="tbtn" onclick="back()">← Accueil</button>
   <div class="tsep"></div>
@@ -251,9 +295,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans
   <button class="pclose" onclick="endPresent()">✕</button>
 </div>
 
+</div><!-- /editorwrap -->
+
 <div class="toast" id="toast"></div>
 <input type="file" id="imgup" accept="image/*" style="display:none" onchange="onImg(event)">
 <input type="file" id="fileload" accept=".tela,.json" style="display:none" onchange="onLoad(event)">
+<input type="file" id="fileload-home" accept=".tela,.json" style="display:none" onchange="onLoadHome(event)">
+<input type="file" id="pptxload" accept=".pptx" style="display:none" onchange="onPPTX(event)">
 
 <script>
 const qp=new URLSearchParams(location.search);
@@ -327,18 +375,10 @@ function setTrans(t){
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 function init(){
-  document.getElementById('ptitle').value=S.title;
   document.getElementById('ptitle').onchange=()=>{S.title=document.getElementById('ptitle').value;save()};
-  const raw=localStorage.getItem('tela_project_'+S.id);
-  if(raw){try{const d=JSON.parse(raw);Object.assign(S,d);S.selEl=null}catch{}}
-  S.slides.forEach(sl=>{if(!sl.bg)sl.bg='#ffffff';});
-  if(!S.slides.length)addSlide();
-  else{renderList();showSlide(S.cur)}
-  setTrans(S.trans||'none');
-  buildBgUI();
-  scaleCanvas();
-  window.addEventListener('resize',scaleCanvas);
   document.addEventListener('keydown',onKey);
+  // Show home page by default
+  showHome();
 }
 
 function buildBgUI(){
@@ -940,7 +980,7 @@ function save(){
   try{
     const all=JSON.parse(localStorage.getItem('tela_projects')||'[]');
     const i=all.findIndex(p=>p.id===S.id);
-    const e={id:S.id,type:'presentation',title:S.title,created:S.created,updated:S.updated};
+    const e={id:S.id,type:'presentation',title:S.title,created:S.created,updated:S.updated,slideCount:S.slides.length};
     if(i>=0)all[i]=e;else all.unshift(e);
     localStorage.setItem('tela_projects',JSON.stringify(all));
   }catch{}
@@ -970,7 +1010,224 @@ function onLoad(e){
   r.readAsText(f);e.target.value='';
 }
 
-function back(){if(confirm('Retour ? (sauvegarde auto effectuée)'))window.location.href='index.html'}
+function back(){save();showHome()}
+
+// ─── HOME PAGE ────────────────────────────────────────────────────────────────
+function showHome(){
+  document.getElementById('editorwrap').style.display='none';
+  document.getElementById('homepage').classList.add('on');
+  renderHomeGrid();
+}
+function showEditor(){
+  document.getElementById('homepage').classList.remove('on');
+  const ew=document.getElementById('editorwrap');
+  ew.style.display='flex';
+  // Resize listener (idempotent)
+  if(!window._resizeListenerAdded){window.addEventListener('resize',scaleCanvas);window._resizeListenerAdded=true;}
+  requestAnimationFrame(scaleCanvas);
+}
+
+function renderHomeGrid(){
+  const grid=document.getElementById('hm-grid');
+  let projects=[];
+  try{projects=JSON.parse(localStorage.getItem('tela_projects')||'[]')}catch{}
+  if(!projects.length){
+    grid.innerHTML='<div class="hm-empty">Aucun projet récent.<br>Créez votre première présentation !</div>';
+    return;
+  }
+  grid.innerHTML=projects.map(p=>{
+    const date=new Date(p.updated||p.created).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const slideCount=p.slideCount||'?';
+    const thumb=buildHomeThumbnail(p.id);
+    return`<div class="hm-card" onclick="openProject('${p.id}')">
+      <div class="hm-card-thumb">${thumb}</div>
+      <div class="hm-card-info">
+        <div class="hm-card-title">${p.title||'Sans titre'}</div>
+        <div class="hm-card-meta">${date}</div>
+      </div>
+      <button class="hm-card-del" onclick="deleteProject(event,'${p.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function buildHomeThumbnail(id){
+  try{
+    const raw=localStorage.getItem('tela_project_'+id);
+    if(!raw)return'';
+    const data=JSON.parse(raw);
+    const sl=data.slides&&data.slides[0];
+    if(!sl)return'';
+    const bg=sl.bg||'#ffffff';
+    let elHtml='';
+    (sl.elements||[]).slice(0,8).forEach(el=>{
+      const s=`position:absolute;left:${el.x*100/960}%;top:${el.y*100/540}%;width:${el.w*100/960}%;height:${el.h*100/540}%;overflow:hidden;opacity:${el.opacity!==undefined?el.opacity:1};`;
+      if(el.type==='text')elHtml+=`<div style="${s}font-size:${el.fs*.11}px;color:${el.color||'#000'}">${el.html||''}</div>`;
+      else if(el.type==='shape'){
+        const clip=getClipPath(el.sh);
+        elHtml+=`<div style="${s}background:${el.fill||'#4ecdc4'};${clip?'clip-path:'+clip+';':'border-radius:'+(el.sh==='circle'?'50%':(el.rad||0)+'px')+';'}"></div>`;
+      } else if(el.type==='image')elHtml+=`<div style="${s}background:url('${el.src}') center/cover no-repeat"></div>`;
+    });
+    return`<div style="position:absolute;inset:0;background:${bg}">${elHtml}</div>`;
+  }catch{return''}
+}
+
+function newPresentation(){
+  S={id:Date.now().toString(),type:'presentation',title:'Présentation',slides:[],cur:0,selEl:null,trans:'none',created:Date.now(),updated:Date.now()};
+  document.getElementById('ptitle').value=S.title;
+  showEditor();
+  S.slides=[];addSlide();setTrans('none');buildBgUI();scaleCanvas();
+}
+
+function openProject(id){
+  try{
+    const raw=localStorage.getItem('tela_project_'+id);
+    if(!raw){toast('Projet introuvable');return;}
+    const d=JSON.parse(raw);
+    S={...d,selEl:null};
+    document.getElementById('ptitle').value=S.title;
+    setTrans(S.trans||'none');
+    showEditor();
+    buildBgUI();scaleCanvas();
+    renderList();showSlide(S.cur||0);
+  }catch{toast('Erreur lors du chargement')}
+}
+
+function deleteProject(e,id){
+  e.stopPropagation();
+  if(!confirm('Supprimer ce projet ?'))return;
+  localStorage.removeItem('tela_project_'+id);
+  try{
+    const all=JSON.parse(localStorage.getItem('tela_projects')||'[]');
+    localStorage.setItem('tela_projects',JSON.stringify(all.filter(p=>p.id!==id)));
+  }catch{}
+  renderHomeGrid();
+}
+
+function onLoadHome(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.type!=='presentation'){alert('Ce fichier n\'est pas une présentation');return}
+      Object.assign(S,d);S.selEl=null;
+      document.getElementById('ptitle').value=S.title;
+      setTrans(S.trans||'none');
+      showEditor();
+      buildBgUI();scaleCanvas();
+      renderList();showSlide(0);
+    }catch{alert('Fichier invalide')}
+  };
+  r.readAsText(f);e.target.value='';
+}
+
+// ─── PPTX IMPORT ──────────────────────────────────────────────────────────────
+async function onPPTX(e){
+  const f=e.target.files[0];if(!f)return;
+  e.target.value='';
+  toast('Chargement PPTX…',60000);
+  try{
+    if(!window.JSZip){
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+    }
+    const zip=await JSZip.loadAsync(f);
+    // Get slide dimensions
+    let cxEmu=9144000,cyEmu=5143500;
+    try{
+      const presXml=await zip.file('ppt/presentation.xml').async('text');
+      const m=presXml.match(/cx="(\d+)"\s+cy="(\d+)"/);
+      if(m){cxEmu=parseInt(m[1]);cyEmu=parseInt(m[2])}
+    }catch{}
+    const sx=960/cxEmu,sy=540/cyEmu;
+    const parser=new DOMParser();
+    const slideFiles=Object.keys(zip.files).filter(fn=>fn.match(/^ppt\/slides\/slide\d+\.xml$/)).sort((a,b)=>{
+      const na=parseInt(a.match(/\d+/)[0]),nb=parseInt(b.match(/\d+/)[0]);return na-nb;
+    });
+    const newSlides=[];
+    for(const sf of slideFiles){
+      const xml=await zip.file(sf).async('text');
+      const doc=parser.parseFromString(xml,'text/xml');
+      // Background
+      let bg='#ffffff';
+      const bgSolid=doc.querySelector('bg solidFill srgbClr');
+      if(bgSolid)bg='#'+bgSolid.getAttribute('val');
+      const elements=[];
+      // Load rels for images
+      const relsPath=sf.replace('slides/slide','slides/_rels/slide').replace('.xml','.xml.rels');
+      const rels={};
+      try{
+        const rXml=await zip.file(relsPath).async('text');
+        const rDoc=parser.parseFromString(rXml,'text/xml');
+        rDoc.querySelectorAll('Relationship').forEach(r=>rels[r.getAttribute('Id')]=r.getAttribute('Target'));
+      }catch{}
+      // Parse shapes/texts
+      doc.querySelectorAll('sp').forEach(sp=>{
+        const xfrm=sp.querySelector('xfrm');if(!xfrm)return;
+        const off=xfrm.querySelector('off'),ext=xfrm.querySelector('ext');if(!off||!ext)return;
+        const x=Math.round(parseInt(off.getAttribute('x')||0)*sx);
+        const y=Math.round(parseInt(off.getAttribute('y')||0)*sy);
+        const w=Math.max(40,Math.round(parseInt(ext.getAttribute('cx')||100)*sx));
+        const h=Math.max(20,Math.round(parseInt(ext.getAttribute('cy')||50)*sy));
+        const paras=sp.querySelectorAll('txBody p');
+        if(paras.length){
+          let fs=18,color='#000000',bold=false,italic=false,htmlParts=[];
+          paras.forEach((p,pi)=>{
+            const runs=p.querySelectorAll('r');
+            if(!runs.length){if(pi>0)htmlParts.push('<br>');return;}
+            runs.forEach(r=>{
+              const rPr=r.querySelector('rPr');
+              if(rPr){
+                const sz=rPr.getAttribute('sz');if(sz)fs=Math.max(8,Math.min(120,Math.round(parseInt(sz)/100)));
+                bold=rPr.getAttribute('b')==='1';italic=rPr.getAttribute('i')==='1';
+                const clr=rPr.querySelector('solidFill srgbClr');if(clr)color='#'+clr.getAttribute('val');
+              }
+              const t=r.querySelector('t');if(t&&t.textContent)htmlParts.push(t.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+            });
+            if(pi<paras.length-1)htmlParts.push('<br>');
+          });
+          const html=htmlParts.join('');
+          if(html.replace(/<br>/g,'').trim()){
+            elements.push({id:Date.now().toString()+Math.random(),type:'text',x,y,w,h,html,fs,font:'Arial',color,bold,italic,underline:false,align:'left',bg:'transparent',opacity:1,zIndex:elements.length});
+          }
+        } else {
+          const fillClr=sp.querySelector('spPr solidFill srgbClr');
+          const fill=fillClr?'#'+fillClr.getAttribute('val'):'#4ecdc4';
+          elements.push({id:Date.now().toString()+Math.random(),type:'shape',sh:'rect',x,y,w,h,fill,rad:0,borderW:0,borderC:'#000000',stroke:4,linestyle:'solid',opacity:1,zIndex:elements.length});
+        }
+      });
+      // Parse images
+      for(const pic of doc.querySelectorAll('pic')){
+        const xfrm=pic.querySelector('xfrm');if(!xfrm)continue;
+        const off=xfrm.querySelector('off'),ext=xfrm.querySelector('ext');if(!off||!ext)continue;
+        const x=Math.round(parseInt(off.getAttribute('x')||0)*sx);
+        const y=Math.round(parseInt(off.getAttribute('y')||0)*sy);
+        const w=Math.max(40,Math.round(parseInt(ext.getAttribute('cx')||100)*sx));
+        const h=Math.max(20,Math.round(parseInt(ext.getAttribute('cy')||50)*sy));
+        const blip=pic.querySelector('blipFill blip');if(!blip)continue;
+        const embed=blip.getAttribute('r:embed')||blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','embed');
+        if(embed&&rels[embed]){
+          const imgPath='ppt/'+rels[embed].replace('../','').replace(/^\//,'');
+          try{
+            const b64=await zip.file(imgPath)?.async('base64');
+            if(b64){
+              const ext2=imgPath.split('.').pop().toLowerCase();
+              const mime=ext2==='png'?'image/png':ext2==='gif'?'image/gif':'image/jpeg';
+              elements.push({id:Date.now().toString()+Math.random(),type:'image',src:`data:${mime};base64,${b64}`,x,y,w,h,fit:'cover',opacity:1,zIndex:elements.length});
+            }
+          }catch{}
+        }
+      }
+      newSlides.push({id:Date.now().toString()+Math.random(),bg,elements});
+    }
+    if(!newSlides.length){toast('Aucune slide trouvée dans ce fichier');return;}
+    const title=f.name.replace('.pptx','').replace('.PPTX','');
+    S={id:Date.now().toString(),type:'presentation',title,slides:newSlides,cur:0,selEl:null,trans:'none',created:Date.now(),updated:Date.now()};
+    document.getElementById('ptitle').value=S.title;
+    save();showEditor();buildBgUI();scaleCanvas();renderList();showSlide(0);
+    toast(`PPTX importé — ${newSlides.length} slide${newSlides.length>1?'s':''} ✓`);
+  }catch(err){console.error(err);toast('Erreur lors de l\'import PPTX',3500)}
+}
+
 
 function onKey(e){
   if(e.key==='Escape'){stopEdit();deselAll();endPresent()}
