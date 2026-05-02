@@ -76,6 +76,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
 <header>
   <div class="logo">Tela</div>
   <button class="hbtn" onclick="openFile()">📂 Ouvrir un fichier</button>
+  <button class="hbtn" onclick="document.getElementById('fpptx').click()" style="border-color:rgba(120,87,255,.4);color:#a78bfa">📊 Importer PPTX <span style="background:rgba(120,87,255,.15);border:1px solid rgba(120,87,255,.3);color:#a78bfa;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:4px">Canva</span></button>
 </header>
 
 <section class="hero">
@@ -126,6 +127,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:20p
 </div>
 
 <input type="file" id="fopen" accept=".tela,.json" style="display:none" onchange="handleOpen(event)">
+<input type="file" id="fpptx" accept=".pptx" style="display:none" onchange="handlePPTX(event)">
 
 <script>
 const PKEY='tela_projects';
